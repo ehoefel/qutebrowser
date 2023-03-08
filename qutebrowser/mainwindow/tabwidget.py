@@ -502,6 +502,22 @@ class TabBar(QTabBar):
             data = {}
         data[key] = value
         self.setTabData(idx, data)
+        self.print_tabs()
+
+    def print_tabs(self):
+        lines = []
+        for idx in range(self.count()):
+            raw_tab_data = self.tabData(idx)
+            active = 'y' if idx == self.currentIndex() else 'n'
+            title = raw_tab_data['page-title']
+            lines.append('{} {}'.format(active, title))
+        import os
+        file_path = os.environ['HOME'] + '/.local/share/qutebrowser/tabs'
+        file = open(file_path, 'w')
+        file.write('\n'.join(lines))
+        file.close()
+
+
 
     def tab_data(self, idx, key):
         """Get tab data for a given key."""
