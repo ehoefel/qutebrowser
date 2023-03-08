@@ -22,6 +22,7 @@
 import functools
 import contextlib
 import dataclasses
+import os
 from typing import Optional, Dict, Any
 
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, Qt, QSize, QRect, QPoint,
@@ -175,6 +176,7 @@ class TabWidget(QTabWidget):
         # a size recalculation which is slow.
         if bar.tabText(idx) != title:
             bar.setTabText(idx, title)
+        self.print_tabs()
 
     def get_tab_fields(self, idx):
         """Get the tab field data."""
@@ -369,6 +371,27 @@ class TabWidget(QTabWidget):
             icon = self.style().standardIcon(QStyle.SP_FileIcon)
         super().setTabIcon(idx, icon)
 
+    def print_tabs(self):
+        lines = []
+        IFS="\t"
+        for idx in range(self.count()):
+            active = 'y' if idx == self.tab_bar().currentIndex() else 'n'
+            title = self.page_title(idx).replace(IFS, ' ')
+            try:
+                url = self.tab_url(idx).toDisplayString()
+            except qtutils.QtValueError:
+                url = 'null'
+            line_content = [active, url, title]
+            lines.append(IFS.join(line_content) + '\n')
+        file_path = os.environ['HOME'] + '/.local/share/qutebrowser/tabs'
+        file = open(file_path, 'w')
+        file.write(''.join(lines))
+        file.close()
+        os.system("/home/edu/Projects/unibar/scripts/wm ping")
+
+
+
+
 
 class TabBar(QTabBar):
 
@@ -502,22 +525,6 @@ class TabBar(QTabBar):
             data = {}
         data[key] = value
         self.setTabData(idx, data)
-        self.print_tabs()
-
-    def print_tabs(self):
-        lines = []
-        for idx in range(self.count()):
-            raw_tab_data = self.tabData(idx)
-            active = 'y' if idx == self.currentIndex() else 'n'
-            title = raw_tab_data['page-title']
-            lines.append('{} {}'.format(active, title))
-        import os
-        file_path = os.environ['HOME'] + '/.local/share/qutebrowser/tabs'
-        file = open(file_path, 'w')
-        file.write('\n'.join(lines))
-        file.close()
-
-
 
     def tab_data(self, idx, key):
         """Get tab data for a given key."""
